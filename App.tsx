@@ -1,4 +1,5 @@
 import * as Location from "expo-location";
+import { StatusBar } from "expo-status-bar";
 import React, { useEffect, useState } from "react";
 import {
   View,
@@ -9,8 +10,20 @@ import {
   Alert,
   ActivityIndicator,
 } from "react-native";
+import { Fontisto } from "@expo/vector-icons";
+import { APIKEY_WEATHER } from "@env";
+
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
-const API_KEY = process.env.APIKEY_WEATHER;
+
+const icons = {
+  Clouds: "cloudy",
+  Clear: "day-sunny",
+  Atmosphere: "cloudy-gusts",
+  Snow: "snow",
+  Rain: "rains",
+  Drizzle: "rain",
+  Thunderstorm: "lightning",
+};
 
 export default function App() {
   const [city, setCite] = useState<string | null>();
@@ -27,11 +40,11 @@ export default function App() {
         { latitude, longitude },
         { useGoogleMaps: false }
       );
-      setCite(location[0].city);
+      setCite(location[0].city || location[0].district);
 
       // get weather
       const response = await fetch(
-        `https://api.openweathermap.org/data/2.5/onecall?lat=${latitude}&lon=${longitude}&exclude=alerts&appid=${API_KEY}&units=metric`
+        `https://api.openweathermap.org/data/2.5/onecall?lat=${latitude}&lon=${longitude}&exclude=alerts&appid=${APIKEY_WEATHER}&units=metric`
       );
       const json = await response.json();
       setDays(json.daily);
@@ -46,6 +59,7 @@ export default function App() {
 
   return (
     <View style={styles.container}>
+      <StatusBar style="light" />
       <View style={styles.city}>
         <Text style={styles.cityName}>{city}</Text>
       </View>
@@ -57,7 +71,7 @@ export default function App() {
         contentContainerStyle={styles.weather}
       >
         {days.length === 0 ? (
-          <View style={styles.day}>
+          <View style={{ ...styles.day, alignItems: "center" }}>
             <ActivityIndicator
               color="white"
               style={{ marginTop: 10 }}
@@ -81,9 +95,23 @@ export default function App() {
               index
             ) => (
               <View key={index} style={styles.day}>
-                <Text style={styles.temp}>
-                  {parseFloat(day.temp.day).toFixed(1)}
-                </Text>
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    width: "100%",
+                    justifyContent: "space-between",
+                  }}
+                >
+                  <Text style={styles.temp}>
+                    {parseFloat(day.temp.day).toFixed(1)}
+                  </Text>
+                  <Fontisto
+                    name={icons[day.weather[0].main]}
+                    size={68}
+                    color="white"
+                  />
+                </View>
                 <Text style={styles.description}>{day.weather[0].main}</Text>
                 <Text style={styles.tinyText}>
                   {day.weather[0].description}
@@ -106,6 +134,7 @@ const styles = StyleSheet.create({
     flex: 1.2,
     justifyContent: "center",
     alignItems: "center",
+    color: "white",
   },
   cityName: {
     fontSize: 58,
@@ -114,18 +143,22 @@ const styles = StyleSheet.create({
   weather: {},
   day: {
     width: SCREEN_WIDTH,
-    alignItems: "center",
+    alignItems: "flex-start",
+    paddingHorizontal: 20,
   },
   temp: {
     marginTop: 50,
     fontWeight: "600",
-    fontSize: 178,
+    fontSize: 100,
+    color: "white",
   },
   tinyText: {
     fontSize: 20,
   },
   description: {
-    marginTop: -30,
-    fontSize: 60,
+    marginTop: -10,
+    fontSize: 30,
+    color: "white",
+    fontWeight: "500",
   },
 });
